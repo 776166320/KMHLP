@@ -1,0 +1,75 @@
+model:
+    name: KMHLP  # [KMHLP, MHLP, K_GCN, GCN]
+    sub_gcn: K_GCN  # [K_GCN, GCN]
+    sub_att: both  # [both, intra_path, inter_path]
+    num_gcn_layers: 1
+
+    num_metapaths_list: [2, 2]
+    hidden_dim: 64
+    attn_dim: 128
+    num_heads: 4
+    attn_type: sim_att  # ['switch_att', 'sim_att', 'no_att']
+    xavier_init: True
+    dropout_rate: 0.5
+
+    agg:
+        # expected_metapaths = [
+        # [(0, 1, 0), (0, 1, 2, 1, 0)],
+        # [(1, 0, 1), (1, 2, 1)]
+        # ]
+        length_list: [[3, 5], [3, 3]]
+
+        type: Conv1d  # [MeanP, LSTM, Rotation, Conv1d, SelfAtt]
+
+        # -----------MeanP-----------
+
+        # -----------LSTM------------
+        bidirectional: False
+        num_layers: 1
+        # ---------------------------
+
+        # ----------Rotation---------
+        r_type: RotatE0  # ['RotatE0', 'RotatE1]
+
+        # ----------Conv1d-----------
+
+        # -----------SelfAtt---------
+        depth: 1
+        nhead: 8
+        mlp_ratio: 2
+        drop_ratio: 0.5
+        attn_drop_ratio: 0.5
+
+    expand:
+        expand_type: Linear  # ['Linear', 'Copy']
+
+data:
+    dataset: IMDB
+    target_path: _actor_movie
+    dataset_root: /home/featurize/work/KMHLP/processed_data/IMDB/
+    num_ntype: 3
+    num_edge_type: 4
+    node_classes: ['actor', 'movie', 'director']
+    use_masks: [[True, True], [True, False]]
+    no_masks: [[False, False], [False, False]]
+    etypes_lists: [[[0, 1], [0, 2, 3, 1]], [[1, 0], [2, 3]]]
+    num_nodes: [6124, 4932, 2393]
+
+train:
+    device: 0
+    num_epochs: 10
+    patience: 4
+
+    # data_loader
+    batch_size: 32
+    neighbor_samples: 50
+    num_workers: 4
+
+    # optimizer
+    optim: adam  # [adam, sgd, adamw]
+    lr: 1.e-3
+    weight_decay: 1.e-3
+    momentum: 0.9
+
+    # loss
+    loss_type: LS
